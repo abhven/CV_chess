@@ -5,6 +5,7 @@ import sys
 import ar_marker as ar
 import detect_corners_r as dc
 import time
+from corner_detector import *
 
 if __name__=="__main__":
 
@@ -33,14 +34,16 @@ if __name__=="__main__":
         if run_detection == False :
 
             t_start = time.time()
-            cv2.imshow('input', frame)
+            # cv2.imshow('input', frame)
             res = dc.multiStageDetection(frame, param_file)
             t_stop = time.time()
             del_t = t_stop - t_start
             print "execution time is "+ str(del_t)
             if res[1] > 20:
                 cv2.imshow('output', cv2.pyrDown(res[0]))
-            cv2.waitKey(25)
+                outp_corners = corner_detector_basic(res[0])
+                cv2.imshow('corners', outp_corners)
+            cv2.waitKey(0)
 
 
         if run_detection:

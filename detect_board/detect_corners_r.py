@@ -4,6 +4,7 @@ import numpy as np
 import sys
 
 import ar_marker as ar
+from corner_detector import *
 
 warped_board_size = 600
 a1_ = 39.2
@@ -237,8 +238,10 @@ if __name__=="__main__":
     # frame = cv2.pyrDown(frame)
     # frame = cv2.pyrDown(frame)
 
-    res = multiStageDetection(frame, param_file,1,1)
+    res = multiStageDetection(frame, param_file,0,0)
 
     if res[1] > 20:
         cv2.imshow('result2', cv2.pyrDown(res[0]))
+        outp_corners = corner_detector_basic(res[0])
+        cv2.imshow('corners', outp_corners)
         cv2.waitKey(0)

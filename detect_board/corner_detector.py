@@ -1,5 +1,4 @@
 import cv2
-
 import numpy as np
 from scipy.spatial import distance
 
@@ -32,11 +31,12 @@ def cluster(list,dist_threshold):
             ysum=ysum+ pt[1][1]
 
         else:
-            bin[j]=[(xsum/i, ysum/i)]
-            xsum =0
-            ysum = 0
-            j=j+1
-            i=0
+            if i:
+                bin[j]=[(xsum/i, ysum/i)]
+                xsum =0
+                ysum = 0
+                j=j+1
+                i=0
     return bin
 
 def corner_detector_basic(img_rgb):
@@ -77,10 +77,11 @@ def corner_detector_combined(img_rgb):
 
     template2 = cv2.imread('type2_corner.png', 0)
     res2 = cv2.matchTemplate(img_gray, template2, cv2.TM_CCOEFF_NORMED)
-    #res= res1+res2
+    res= res1+res2
 
     print res1
-   # print res
+    print 1234
+    print res
     w, h = template1.shape[::-1] # both the templates have the same
 
     threshold = 0.8

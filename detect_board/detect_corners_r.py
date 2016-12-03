@@ -4,7 +4,7 @@ import numpy as np
 import sys
 
 import ar_marker as ar
-#from corner_detector import *
+from corner_detector import *
 
 warped_board_size = 600
 a1_ = 39.2
@@ -28,6 +28,7 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
     R_score = 0
     outp = None
     num_corners = 0;
+    corner_indexes = [];
 
     outp_dbg = frame_inp.copy()
 
@@ -84,6 +85,7 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
             marker_index = board_ar_map[marker.marker.id][0]
             point_index = board_ar_map[marker.marker.id][1]
             board_corners[marker_index] = np.array((marker.points[point_index][0], marker.points[point_index][1]))
+            corner_indexes.append(board_ar_map[marker.marker.id][0])
 
         if marker.marker.id in ar_points:
 
@@ -174,7 +176,7 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
             cv2.imshow('warped', outp)
             cv2.waitKey(0)
 
-    return [board_corners, outp, R_score, H, outp_dbg, real_coord]
+    return [board_corners, outp, R_score, H, outp_dbg, real_coord, corner_indexes]
 
 def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
 
@@ -182,6 +184,7 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
     H = []
     outp_final = []
     board_points = [];
+    corner_indexes = [];
 
     res1 = getBoardCorners(frame_inp, param_file, debug_mode, draw_mode)
     if debug_mode :
@@ -192,6 +195,8 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
             cv2.imshow('STG1_dbg', cv2.pyrDown(res1[4]))
 
     if res1[1] is not None:
+
+        corner_indexes = res1[6]
 
         if res1[2] > 20:
             R_score = res1[2]
@@ -223,13 +228,20 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                         # print "STAGE1 complete"
         else:
             res2 = getBoardCorners(res1[1], param_file, 0, 1)
-            cv2.putText(res2[4], 'R2score = ' + str(res2[2]), (40, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (240, 0, 0), 2)
-            cv2.imshow('STG2_dbg', cv2.pyrDown(res2[4]))
+            if debug_mode:
+                print '2:R_score= ' + str(res2[2])
+                if draw_mode:
+                    cv2.putText(res2[4], 'R2score = ' + str(res2[2]), (40, 40),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (240, 0, 0), 2)
+                    cv2.imshow('STG2_dbg', cv2.pyrDown(res2[4]))
 
             if res2[1] is not None:
+
+                corner_indexes = res2[6]
+
                 H2 = np.dot(res2[3], res1[3])
-                print ' 2:R_score' + str(res2[2])
+                if debug_mode:
+                    print ' 2:R_score' + str(res2[2])
 
                 if res2[2] > 20:
                     R_score = res2[2]
@@ -238,11 +250,26 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                                   offset:int(2*a1 + b + offset)]
                     outp_final = outp_stage2
                     H = H2
+                    # assign the points which are closest to the board as board_points
+                    for p in res1[5]:
+                        p_temp = p - (a1 + offset) * np.array([1, 1])
+                        p[0] -= offset
+                        p[1] -= offset
+                        if ((abs(p_temp[1] - b) < epsilon or abs(p_temp[1]) < epsilon) and
+                                (abs(p_temp[0] - b) < epsilon or abs(p_temp[0]) < epsilon)):
+                            board_points.append(p)
+
                     if draw_mode:
+
+                        for p in board_points:
+                            cv2.circle(outp_stage2, (int(p[0]), int(p[1])), 2, (0, 0, 240), 2)
+                            print 'drawing circle'
+                            print p
+
                         cv2.imshow('result2', cv2.pyrDown(outp_stage2))
                         cv2.waitKey(1)
 
-    return [outp_final, R_score, H, board_points]
+    return [outp_final, R_score, H, board_points, corner_indexes]
 
 
 if __name__=="__main__":
@@ -262,7 +289,8 @@ if __name__=="__main__":
 
     if res[1] > 20:
         cv2.imshow('resultFinal', cv2.pyrDown(res[0]))
-        print res[3]
-        #outp_corners = corner_detector_basic(res[0])
-        #cv2.imshow('corners', outp_corners)
+        # print res[3]
+        # print res[4]
+        # outp_corners = corner_detector_combined(res[0])
+        # cv2.imshow('corners', outp_corners)
         cv2.waitKey(0)

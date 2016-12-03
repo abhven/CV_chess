@@ -210,7 +210,7 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                 p_temp = p - (a1 + offset) * np.array([1, 1])
                 p[0] -= offset
                 p[1] -= offset
-                if ((abs(p_temp[1] - b) < epsilon or abs(p_temp[1]) < epsilon) and
+                if ((abs(p_temp[1] - b) < epsilon or abs(p_temp[1]) < epsilon) or
                         (abs(p_temp[0] - b) < epsilon or abs(p_temp[0]) < epsilon)):
                     board_points.append(p)
 
@@ -227,7 +227,7 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
 
                         # print "STAGE1 complete"
         else:
-            res2 = getBoardCorners(res1[1], param_file, 0, 1)
+            res2 = getBoardCorners(res1[1], param_file, debug_mode, draw_mode)
             if debug_mode:
                 print '2:R_score= ' + str(res2[2])
                 if draw_mode:
@@ -285,7 +285,7 @@ if __name__=="__main__":
     # frame = cv2.pyrDown(frame)
     # frame = cv2.pyrDown(frame)
 
-    res = multiStageDetection(frame, param_file,0,0)
+    res = multiStageDetection(frame, param_file,1,0)
 
     if res[1] > 20:
         cv2.imshow('resultFinal', cv2.pyrDown(res[0]))

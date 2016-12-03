@@ -1,0 +1,8 @@
+git status
+git pull
+
+git add detect_board/corner_detector.py 
+
+git commit -m "crash fix for i"
+git push origin master
+

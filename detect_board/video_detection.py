@@ -41,7 +41,7 @@ if __name__=="__main__":
             print "execution time is "+ str(del_t)
             if res[1] > 20:
                 cv2.imshow('output', cv2.pyrDown(res[0]))
-                outp_corners = corner_detector_basic(res[0])
+                outp_corners = corner_detector_combined(res[0])
                 cv2.imshow('corners', outp_corners)
             cv2.waitKey(0)
 

@@ -9,6 +9,14 @@ try:    #initialize the priority Queue
 except ImportError:
     import Queue as q
 
+def project(img, C1, C2, C3, C4, L, B):
+    rows, cols, ch = img.shape
+    pts1 = np.float32([C1, C2, C3, C4])  # Ci are the column corner position vector with 2 rows each
+    pts2 = np.float32([[0, 0], [L, 0], [0, B], [L, B]]) # L and B are the dimensions of the output image
+    M = cv2.getPerspectiveTransform(pts1, pts2) # get the transformation matrix
+    img_out = cv2.warpPerspective(img, M, (L, B))
+
+    return img_out
 
 
 def cluster(list,dist_threshold):
@@ -191,13 +199,26 @@ def corner_detect(img_rgb): # returns the list of corners detected from the imag
         corrected_corner.append([pt[0]+ w/2, pt[1]+h/2])
     return corrected_corner, grid_size,y_grid,x_grid
 
+def get_sqaures(img, all_corners):
+    squares=[];
+    for i in range(8):
+        for j in range(8):
+            pt1 = all_corners[i][j]
+            pt2 = all_corners[i+1][j]
+            pt3 = all_corners[i][j+1]
+            pt4 = all_corners[i+1][j + 1]
+            #print pt4, pt2,pt3, pt1,
+            sq_img=project(img,pt4, pt2,pt3, pt1, 60,60 )
+            squares.append(sq_img)
 
-def corner_detector_assisted(img_rgb, ref):
+    return squares
+def corner_detector_assisted(img, ref):
+    img_rgb=img.copy()
     _, h, _=img_rgb.shape[::-1]
     lower=  math.floor(h/30 )
     higher = math.floor(h*29/30)
     corner=ref[0]
-
+    all_corners=[[(0, 0) for i in range(9)] for j in range (9)]
     if corner==1:
         start= [lower , lower]
     elif corner == 3:
@@ -243,7 +264,24 @@ def corner_detector_assisted(img_rgb, ref):
         if error_flag:
             print "\n reconstruction error. frame will be ignored"
             cv2.putText(img_rgb, "RECONSTUCTION ERROR! IGNORING FRAME!!", (int(h/10), int(h/2)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
-    return img_rgb
+        else:
+            for pt in data:
+                all_corners[pt[3]][pt[4]]=(pt[1], pt[2])
+            for pt in new_data:
+                all_corners[pt[3]][pt[4]]=(pt[1], pt[2])
+        # use all corners for extracting all the squares
+            squares=get_sqaures(img, all_corners)
+
+            for sq in squares:
+                cv2.imshow('corners',sq)
+                cv2.waitKey(0)
+
+
+        for i in range(9):
+            for j in range(9):
+                pt=all_corners[i][j]
+                cv2.circle(img_rgb, (pt[0], pt[1]), 15, (0, 255, 0), -1)
+    return error_flag, img_rgb, squares
 
 
 

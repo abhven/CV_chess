@@ -4,7 +4,7 @@ import numpy as np
 import sys
 
 import ar_marker as ar
-from corner_detector import *
+#from corner_detector import *
 
 warped_board_size = 600
 a1_ = 39.2
@@ -13,6 +13,7 @@ b_ = 508.2
 offset_ = 45
 
 off_buf = 40
+epsilon = 1e-3
 a1 = a1_/b_*warped_board_size
 a2 = a2_/b_*warped_board_size
 offset = offset_/b_*warped_board_size + off_buf
@@ -173,13 +174,14 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
             cv2.imshow('warped', outp)
             cv2.waitKey(0)
 
-    return [board_corners, outp, R_score, H, outp_dbg]
+    return [board_corners, outp, R_score, H, outp_dbg, real_coord]
 
 def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
 
     R_score = 0;
     H = []
     outp_final = []
+    board_points = [];
 
     res1 = getBoardCorners(frame_inp, param_file, debug_mode, draw_mode)
     if debug_mode :
@@ -197,10 +199,28 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                          int(offset):int(2 * a1 + b + offset)]
             outp_final = outp_stage1
             H = res1[3]
+
+            # assign the points which are closest to the board as board_points
+            for p in res1[5]:
+                p_temp = p - (a1 + offset) * np.array([1, 1])
+                p[0] -= offset
+                p[1] -= offset
+                if ((abs(p_temp[1] - b) < epsilon or abs(p_temp[1]) < epsilon) and
+                        (abs(p_temp[0] - b) < epsilon or abs(p_temp[0]) < epsilon)):
+                    board_points.append(p)
+
             if draw_mode:
+
+                for p in board_points:
+                    cv2.circle(outp_stage1, (int(p[0]),int(p[1])), 2, (0, 0, 240), 2)
+                    print 'drawing circle'
+                    print p
+
                 cv2.imshow('result1', cv2.pyrDown(outp_stage1))
                 cv2.waitKey(1)
-                # print "STAGE1 complete"
+
+
+                        # print "STAGE1 complete"
         else:
             res2 = getBoardCorners(res1[1], param_file, 0, 1)
             cv2.putText(res2[4], 'R2score = ' + str(res2[2]), (40, 40),
@@ -222,7 +242,7 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                         cv2.imshow('result2', cv2.pyrDown(outp_stage2))
                         cv2.waitKey(1)
 
-    return [outp_final, R_score, H]
+    return [outp_final, R_score, H, board_points]
 
 
 if __name__=="__main__":
@@ -241,7 +261,8 @@ if __name__=="__main__":
     res = multiStageDetection(frame, param_file,0,0)
 
     if res[1] > 20:
-        cv2.imshow('result2', cv2.pyrDown(res[0]))
-        outp_corners = corner_detector_basic(res[0])
-        cv2.imshow('corners', outp_corners)
+        cv2.imshow('resultFinal', cv2.pyrDown(res[0]))
+        print res[3]
+        #outp_corners = corner_detector_basic(res[0])
+        #cv2.imshow('corners', outp_corners)
         cv2.waitKey(0)

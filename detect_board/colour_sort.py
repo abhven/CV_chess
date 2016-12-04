@@ -19,5 +19,5 @@ def colour_sort(img):
     colour[3] = len(rows_B[0])
     colour[1] = 3600-sum(colour)
 
-    return img#,colour #, img
+    return colour #, img
 

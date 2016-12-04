@@ -14,6 +14,8 @@ if __name__=="__main__":
         exit()
 
     detection_status = {}
+    detection_status['board'] = False
+    detection_status['corners'] = False
     frame_index = 0
 
     img_file = sys.argv[1];
@@ -56,27 +58,25 @@ if __name__=="__main__":
             # cv2.waitKey(0)
 
             # run the main code for corner detection
-            [corner_flag, outp_corners,allcorners] = corner_detector_assisted(res_board[0], res_board[4])
-
-
-            # To see the squares
-            # if corner_flag == False:
-            #     squares = get_squares(res_board[0],allcorners)
+            [corner_error_flag, outp_corners,allcorners] = corner_detector_assisted(res_board[0], res_board[4])
+            detection_status['corners'] = not corner_error_flag
+            ##To see the squares
+            if corner_error_flag == False:
+                squares = get_squares(res_board[0],allcorners)
                 # print(squares)
+                # Displays individual squares
+                for i in squares:
+                    cv2.imshow(i, squares[i])
+                    cv2.waitKey(30)
+                    cv2.waitKey(0)
 
             # display the result of corner detection
             cv2.imshow('corners', outp_corners)
-
-            # Displays individual squares
-            # for i in squares:
-            #     cv2.imshow(i,squares[i])
-            #     cv2.waitKey(0)
-
-            cv2.waitKey(25)
+            cv2.waitKey(40)
 
         t_stop = time.time()
         del_t = t_stop - t_start
-        print "Corner Detection : execution time is " + str(del_t)
+        print 'Corner Detection :' + str(detection_status['board'])+ '; execution time is ' + str(del_t)
 
         ##====Extract feature vector for each of the cell =====
         #  (could be number of cells for black/white or number of arcs???

@@ -2,9 +2,11 @@
 import cv2
 import numpy as np
 import sys
+import time
 
 import ar_marker as ar
 from corner_detector import *
+import cellscore as cs
 
 warped_board_size = 600
 a1_ = 39.2
@@ -282,15 +284,77 @@ if __name__=="__main__":
     param_file = sys.argv[2];
 
     frame = cv2.imread(img_file)
+
+    detection_status = {}
+    board_features = {}
+    let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    num = ['1', '2', '3', '4', '5', '6', '7', '8']
     # frame = cv2.pyrDown(frame)
     # frame = cv2.pyrDown(frame)
 
-    res = multiStageDetection(frame, param_file,1,0)
+    ##====Executing the board detection here =====
+    t_start = time.time()
+    res_board = multiStageDetection(frame, param_file)
+    t_stop = time.time()
+    del_t = t_stop - t_start
 
-    if res[1] > 20:
-        cv2.imshow('resultFinal', cv2.pyrDown(res[0]))
-        # print res[3]
-        # print res[4]
-        # outp_corners = corner_detector_combined(res[0])
-        # cv2.imshow('corners', outp_corners)
+    # use threshold to compute success of the stage
+    if res_board[1] > 40:
+        detection_status['board'] = True;
+    else:
+        detection_status['board'] = False;
+    print 'Board Detection :' + str(detection_status['board']) + 'execution time : ' + str(del_t)
+
+    ##====Executing the corner detection and updation =====
+    t_start = time.time()
+    if detection_status['board']:
+        # Display the res_boardult of board detection if successful
+        cv2.imshow('output', res_board[0])
+        # out.write(res_board[0])
+        # cv2.waitKey(0)
+
+        # run the main code for corner detection
+        [corner_error_flag, outp_corners, all_corners] = corner_detector_assisted(res_board[0], res_board[4])
+        detection_status['corners'] = not corner_error_flag
+        all_colours = []
+        # all_colours = load_colours.parseCSVMatrix(param_file, 4)
+
+        ##To see the squares
+        if corner_error_flag == False:
+            squares = get_squares(res_board[0], all_corners)
+            # print(squares)
+            # Displays individual squares
+            for i in squares:
+                pass
+                # cv2.imshow(i, squares[i])
+                # print i
+                # cv2.waitKey(30)
+                # cv2.waitKey(0)
+            for i in range(8):
+                for j in range(8):
+                    index = let[i]+num[j]
+                    cell_img = squares[index]
+
+                    # Send correct cell colour and the piece information
+                    (W,G,R,B) = cs.computeCellColourScore(cell_img, 'w', 'p', all_colours)
+                    pt=all_corners[i][j]
+                    # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                    cv2.putText(outp_corners, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                (255, 0, 0), 1)
+                    red_score = R/3600.0
+                    black_score = B/3600.0
+                    board_features[index] = [red_score, black_score]
+                    scores = '[%.2f,%.2f]' % (red_score, black_score)
+                    if (i+j)%2 ==0:
+                        text_color = (220,40,40)
+                    else:
+                        text_color = (200, 240, 240)
+                    cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
+                                text_color, 1)
+                    print index +' : ' + scores
+                    cv2.waitKey(10)
+
+        # display the result of corner detection
+        cv2.imshow('corners', outp_corners)
         cv2.waitKey(0)
+

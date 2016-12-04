@@ -246,6 +246,8 @@ def corner_detector_assisted(img, ref):
         i=i+1
     dat.sort()
     ref_st=dat[0]
+
+    print 'Distance Euclidean is ' + str(distance.euclidean(start, [ref_st[1], ref_st[2]])) + '; grid val is ' + str(grid_size*2.7)
     if distance.euclidean(start, [ref_st[1], ref_st[2]]) < (grid_size*2.7):
 
         for pt in dat:
@@ -258,6 +260,7 @@ def corner_detector_assisted(img, ref):
             if pt[1]>higher or pt[2]> higher or pt[1]< lower or pt[2]< lower:
                 error_flag=1;
 
+        print 'Error Flag is ' + str(error_flag)
         if error_flag:
             print "\n reconstruction error. frame will be ignored"
             cv2.putText(img_rgb, "RECONSTUCTION ERROR! IGNORING FRAME!!", (int(h/10), int(h/2)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
@@ -266,8 +269,8 @@ def corner_detector_assisted(img, ref):
                 all_corners[pt[3]][pt[4]]=(pt[1], pt[2])
             for pt in new_data:
                 all_corners[pt[3]][pt[4]]=(pt[1], pt[2])
-        # use all corners for extracting all the squares
-        #     squares=get_squares(img, all_corners)
+            # use all corners for extracting all the squares
+            #     squares=get_squares(img, all_corners)
 
             # getting each of the individual cell patches into the image
             # print 'writing cells back to frame'
@@ -295,12 +298,14 @@ def corner_detector_assisted(img, ref):
                 all_corners = np.swapaxes(all_corners, 1, 0)
                 all_corners = np.fliplr(all_corners)
 
-            for i in range(9):
-                for j in range(9):
-                    pt=all_corners[i][j]
-                    cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
-                    cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
-                                (255, 0, 0), 1)
+            # for i in range(9):
+            #     for j in range(9):
+            #         pt=all_corners[i][j]
+            #         # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+            #         cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+            #                     (255, 0, 0), 1)
+            #         print 'drawing corner information'
+            #         cv2.waitKey(10)
     return (error_flag, img_rgb,all_corners)
 
 

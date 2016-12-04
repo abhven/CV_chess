@@ -215,21 +215,21 @@ def get_sqaures(img, all_corners):
 def corner_detector_assisted(img, ref):
     img_rgb=img.copy()
     _, h, _=img_rgb.shape[::-1]
-    lower=  math.floor(h/30 )
-    higher = math.floor(h*29/30)
-    corner=ref[0]
+    lower=  math.floor(h/60 )
+    higher = math.floor(h*59/60)
+
     all_corners=[[(0, 0) for i in range(9)] for j in range (9)]
-    if corner==1:
+    if ref[0]==1:
         start= [lower , lower]
-    elif corner == 3:
+    elif ref[0] == 3:
         start = [lower, higher]
-    elif corner== 2:
+    elif ref[0]== 2:
         start = [higher, lower]
-    elif corner==0: # looks fixed
+    elif ref[0]==0: # looks fixed
         start = [higher, higher]
     else:
         start=0
-    print ref, ' ', start
+
 
     corner, grid_size,y_grid,x_grid= corner_detect(img_rgb)
     dat=[]
@@ -248,19 +248,12 @@ def corner_detector_assisted(img, ref):
             x_val=int(round(math.fabs(ref_st[1]-pt[1])/x_grid)+1)
             y_val = int(round(math.fabs(ref_st[2] - pt[2])/y_grid)+1)
             data.append([pt[0], pt[1], pt[2], x_val, y_val])
+        new_data = synthetic_corner(data)
 
-        i=0
-        for pt in data:
-            cv2.circle(img_rgb, (pt[1], pt[2]), 5, (255, 0, 0), -1)
-            cv2.putText(img_rgb,str(pt[3])+' '+str(pt[4]),(pt[1], pt[2]),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0, 255, 0),1)
-            i=i+1;
-        new_data= synthetic_corner(data)
         for pt in new_data:
             if pt[1]>higher or pt[2]> higher or pt[1]< lower or pt[2]< lower:
                 error_flag=1;
-            cv2.circle(img_rgb, (pt[1], pt[2]), 5, (0, 255, 0), -1)
-            cv2.putText(img_rgb,str(pt[3])+' '+str(pt[4]),(pt[1], pt[2]),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0, 0, 255),1)
-            i=i+1;
+
         if error_flag:
             print "\n reconstruction error. frame will be ignored"
             cv2.putText(img_rgb, "RECONSTUCTION ERROR! IGNORING FRAME!!", (int(h/10), int(h/2)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
@@ -281,13 +274,28 @@ def corner_detector_assisted(img, ref):
             #     out_file = '../gen_cell/corner' + str(row) + str(col) + '.png';
             #     print 'cell [%f,%f]' % (i,j)
             #     cv2.imwrite(out_file,squares[i])
-            #     cv2.waitKey(0)
+                #     cv2.waitKey(0)
 
+            all_corners = np.array(all_corners)
+            if ref[0] == 1:
+                all_corners = np.swapaxes(all_corners, 1, 0)
+                all_corners = np.flipud(all_corners)
+            elif ref[0] == 3:
+                all_corners = np.swapaxes(all_corners, 1, 0)
+            elif ref[0] == 2:
+                all_corners = np.flipud(all_corners)
+                all_corners = np.swapaxes(all_corners, 1, 0)
+                all_corners = np.flipud(all_corners)
+            elif ref[0] == 0:  # looks fixed
+                all_corners = np.swapaxes(all_corners, 1, 0)
+                all_corners = np.fliplr(all_corners)
 
-        for i in range(9):
-            for j in range(9):
-                pt=all_corners[i][j]
-                cv2.circle(img_rgb, (pt[0], pt[1]), 15, (0, 255, 0), -1)
+            for i in range(9):
+                for j in range(9):
+                    pt=all_corners[i][j]
+                    cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                    cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                (255, 0, 0), 1)
     return (error_flag, img_rgb)
 
 

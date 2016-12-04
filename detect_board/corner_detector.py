@@ -199,19 +199,23 @@ def corner_detect(img_rgb): # returns the list of corners detected from the imag
         corrected_corner.append([pt[0]+ w/2, pt[1]+h/2])
     return corrected_corner, grid_size,y_grid,x_grid
 
-def get_sqaures(img, all_corners):
-    squares=[];
+def get_squares(img, all_corners):
+    squares= {}
+    let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    let.reverse()
+    num = ['1', '2', '3', '4', '5', '6', '7', '8']
+    print "\n new iteration"
     for i in range(8):
         for j in range(8):
-            pt1 = all_corners[i][j]
-            pt2 = all_corners[i+1][j]
-            pt3 = all_corners[i][j+1]
-            pt4 = all_corners[i+1][j + 1]
-            #print pt4, pt2,pt3, pt1,
-            sq_img=project(img,pt4, pt2,pt3, pt1, 60,60 )
-            squares.append(sq_img)
-
+            pt1 = (all_corners[i][j][0] , all_corners[i][j][1])
+            pt2 = (all_corners[i+1][j][0] , all_corners[i+1][j][1])
+            pt3 = (all_corners[i][j+1][0] , all_corners[i][j+1][1])
+            pt4 = (all_corners[i+1][j + 1][0] , all_corners[i+1][j + 1][1])
+            print i,j,pt4, pt2,pt3, pt1,' \n'
+            sq_img=project(img,pt1, pt2,pt3, pt4, 60,60 )
+            squares[let[i]+num[j]] = sq_img
     return squares
+
 def corner_detector_assisted(img, ref):
     img_rgb=img.copy()
     _, h, _=img_rgb.shape[::-1]
@@ -263,7 +267,7 @@ def corner_detector_assisted(img, ref):
             for pt in new_data:
                 all_corners[pt[3]][pt[4]]=(pt[1], pt[2])
         # use all corners for extracting all the squares
-            squares=get_sqaures(img, all_corners)
+        #     squares=get_squares(img, all_corners)
 
             # getting each of the individual cell patches into the image
             # print 'writing cells back to frame'
@@ -275,8 +279,9 @@ def corner_detector_assisted(img, ref):
             #     print 'cell [%f,%f]' % (i,j)
             #     cv2.imwrite(out_file,squares[i])
                 #     cv2.waitKey(0)
-
+            print(all_corners[1][1])
             all_corners = np.array(all_corners)
+            print(all_corners[1][1][0],all_corners[1][1][1])
             if ref[0] == 1:
                 all_corners = np.swapaxes(all_corners, 1, 0)
                 all_corners = np.flipud(all_corners)
@@ -296,7 +301,7 @@ def corner_detector_assisted(img, ref):
                     cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
                     cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
                                 (255, 0, 0), 1)
-    return (error_flag, img_rgb)
+    return (error_flag, img_rgb,all_corners)
 
 
 

@@ -56,10 +56,22 @@ if __name__=="__main__":
             # cv2.waitKey(0)
 
             # run the main code for corner detection
-            [corner_flag, outp_corners] = corner_detector_assisted(res_board[0], res_board[4])
+            [corner_flag, outp_corners,allcorners] = corner_detector_assisted(res_board[0], res_board[4])
+
+
+            # To see the squares
+            # if corner_flag == False:
+            #     squares = get_squares(res_board[0],allcorners)
+                # print(squares)
 
             # display the result of corner detection
             cv2.imshow('corners', outp_corners)
+
+            # Displays individual squares
+            # for i in squares:
+            #     cv2.imshow(i,squares[i])
+            #     cv2.waitKey(0)
+
             cv2.waitKey(25)
 
         t_stop = time.time()

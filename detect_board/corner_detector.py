@@ -272,16 +272,23 @@ def corner_detector_assisted(img, ref):
         # use all corners for extracting all the squares
             squares=get_sqaures(img, all_corners)
 
-            for sq in squares:
-                cv2.imshow('corners',sq)
-                cv2.waitKey(0)
+            # getting each of the individual cell patches into the image
+            # print 'writing cells back to frame'
+            # cv2.waitKey(0)
+            # for i in range(len(squares)):
+            #     row = i/8
+            #     col = i%8
+            #     out_file = '../gen_cell/corner' + str(row) + str(col) + '.png';
+            #     print 'cell [%f,%f]' % (i,j)
+            #     cv2.imwrite(out_file,squares[i])
+            #     cv2.waitKey(0)
 
 
         for i in range(9):
             for j in range(9):
                 pt=all_corners[i][j]
                 cv2.circle(img_rgb, (pt[0], pt[1]), 15, (0, 255, 0), -1)
-    return error_flag, img_rgb, squares
+    return (error_flag, img_rgb)
 
 
 

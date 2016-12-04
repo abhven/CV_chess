@@ -1,27 +1,23 @@
 import cv2
 import numpy as np
 import sys
-
-import ar_marker as ar
-import detect_corners_r as dc
 import time
+
+import detect_corners_r as dc
 from corner_detector import *
+import cellscore as cs
 
 if __name__=="__main__":
 
     if(len(sys.argv) < 3) :
-        print "USAGE: python detect_features file.png sample_param.yml"
+        print "USAGE: python video_detection file.mov sample_param.yml"
         exit()
+
+    detection_status = {}
+    frame_index = 0
 
     img_file = sys.argv[1];
     param_file = sys.argv[2];
-
-    run_detection = False
-
-    # cv2.namedWindow('result1')
-    # cv2.namedWindow('STG1_dbg')
-    # cv2.namedWindow('result2')
-    # cv2.namedWindow('STG2_dbg')
 
     cap = cv2.VideoCapture(img_file)
     ret, frame = cap.read()
@@ -34,37 +30,48 @@ if __name__=="__main__":
         exit()
 
     while ret:
-        if run_detection == False :
 
-            t_start = time.time()
-            # cv2.imshow('input', frame)
-            res = dc.multiStageDetection(frame, param_file)
-            t_stop = time.time()
-            del_t = t_stop - t_start
-            print "execution time is "+ str(del_t)
+        ##==== Print some basic info for each iteration ====
+        frame_index += 1
+        print "Frame : " + str(frame_index)
 
-            if res[1] > 40:
-                cv2.imshow('output', cv2.pyrDown(res[0]))
-                cv2.imshow('output', res[0])
-                # out.write(res[0])
-                cv2.waitKey(0)
-                [corner_flag, outp_corners] = corner_detector_assisted(res[0], res[4])
-                cv2.imshow('corners', outp_corners)
+        ##====Executing the board detection here =====
+        t_start = time.time()
+        res_board = dc.multiStageDetection(frame, param_file)
+        t_stop = time.time()
+        del_t = t_stop - t_start
+        # use threshold to compute success of the stage
+        if res_board[1] > 40:
+            detection_status['board'] = True;
+        else:
+            detection_status['board'] = False;
+        print 'Board Detection :' + str(detection_status['board']) + 'execution time : ' + str(del_t)
+
+        ##====Executing the corner detection and updation =====
+        t_start = time.time()
+        if detection_status['board']:
+            # Display the res_boardult of board detection if successful
+            cv2.imshow('output', res_board[0])
+            # out.write(res_board[0])
+            # cv2.waitKey(0)
+
+            # run the main code for corner detection
+            [corner_flag, outp_corners] = corner_detector_assisted(res_board[0], res_board[4])
+
+            # display the result of corner detection
+            cv2.imshow('corners', outp_corners)
             cv2.waitKey(25)
 
-        if run_detection:
-            frame = cv2.pyrDown(frame)
-            markers = ar.detectMarker(frame, param_file)
-            for marker in markers:
-                print marker.marker.id
-                for i in range(4):
-                    i2 = (i + 1) % 4
-                    cv2.line(frame, (marker.points[i][0], marker.points[i][1]),
-                             (marker.points[i2][0], marker.points[i2][1]), (0, 240, 0), 2)
-                    ar.drawMarker(frame, marker)
+        t_stop = time.time()
+        del_t = t_stop - t_start
+        print "Corner Detection : execution time is " + str(del_t)
 
-            cv2.imshow('output', frame)
-            cv2.waitKey(0)
+        ##====Extract feature vector for each of the cell =====
+        #  (could be number of cells for black/white or number of arcs???
+
+        ##====Use the feature vectors to compute a cell move ====
+
+        ##====Check if the cell is valid ====
 
         ret, frame = cap.read()
 

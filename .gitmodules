@@ -1,0 +1,3 @@
+[submodule "Chessnut"]
+	path = Chessnut
+	url = https://github.com/cgearhart/Chessnut

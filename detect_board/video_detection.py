@@ -26,6 +26,9 @@ if __name__=="__main__":
     cap = cv2.VideoCapture(img_file)
     ret, frame = cap.read()
 
+    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (692, 692))
+
     if not ret:
         print 'can\'t open the video'
         exit()
@@ -39,12 +42,12 @@ if __name__=="__main__":
             t_stop = time.time()
             del_t = t_stop - t_start
             print "execution time is "+ str(del_t)
-            if res[1] > 20:
+            if res[1] > 40:
                 cv2.imshow('output', cv2.pyrDown(res[0]))
+                # out.write(res[0])
                 outp_corners = corner_detector_combined(res[0])
                 cv2.imshow('corners', outp_corners)
-            cv2.waitKey(0)
-
+            cv2.waitKey(25)
 
         if run_detection:
             frame = cv2.pyrDown(frame)

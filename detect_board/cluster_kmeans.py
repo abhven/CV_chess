@@ -74,17 +74,3 @@ def clusterColours(cell_img, type, inp_colours):
             converged = True
 
     return (num_white, num_green, num_black, num_red)
-
-if __name__=="__main__":
-
-    if(len(sys.argv) < 3) :
-        print "USAGE: python detect_features file.png colours.csv"
-        exit()
-
-    img_file = sys.argv[1];
-    param_file = sys.argv[2];
-
-    all_colours = load_colours.parseCSVMatrix(param_file, 4)
-    img = cv2.imread('img_file')
-
-    print clusterColours(img, 'White', all_colours)

@@ -3,7 +3,6 @@ import numpy as np
 
 def colour_sort(img):
     img = cv2.blur(img, (5, 5))
-    bin=[(205, 220,277), (40,50,200), (50,60,30), (30,30,30)]
     _,w, h = img.shape[::-1]
     colour=[0, 0,0,0] #[ white, green, red, black
     # remove the img variable later for

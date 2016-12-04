@@ -6,6 +6,10 @@ import time
 import detect_corners_r as dc
 from corner_detector import *
 import cellscore as cs
+import chess_move
+from os import path
+sys.path.append('../Chessnut')
+from Chessnut import Game
 
 if __name__=="__main__":
 
@@ -15,6 +19,9 @@ if __name__=="__main__":
 
     detection_status = {}
     frame_index = 0
+
+    chessgame = Game()
+    print(chessgame)
 
     img_file = sys.argv[1];
     param_file = sys.argv[2];
@@ -45,7 +52,7 @@ if __name__=="__main__":
             detection_status['board'] = True;
         else:
             detection_status['board'] = False;
-        print 'Board Detection :' + str(detection_status['board']) + 'execution time : ' + str(del_t)
+        print 'Board Detection :' + str(detection_status['board']) + ' ; execution time : ' + str(del_t)
 
         ##====Executing the corner detection and updation =====
         t_start = time.time()
@@ -68,10 +75,10 @@ if __name__=="__main__":
 
         ##====Extract feature vector for each of the cell =====
         #  (could be number of cells for black/white or number of arcs???
+        #board_features = cs.computeCellColourScore()
 
         ##====Use the feature vectors to compute a cell move ====
-
-        ##====Check if the cell is valid ====
+        #chess_move.detectMove()
 
         ret, frame = cap.read()
 

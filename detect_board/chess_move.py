@@ -18,6 +18,52 @@ colour_max = 0.6
 
 change_thresh = 0.18
 
+def startPoints(p_removed,notp_placed,heatmap_placed):
+    totalscore = {}
+    for i in p_removed:
+        x = i[0]
+        y = i[1]
+        # R placed one step
+        # Find whta is being passed on
+        score = [0,0,0]
+        n = 1
+        while len(notp_placed) > 0:
+            for j in range(x-n,x+n+1):
+                for k in range(y-n,y+n+1):
+                    try:
+                        score[n] = score[n] + heatmap_placed[j,k]
+                        if (j, k, heatmap_placed[j, k]) in notp_placed:
+                            notp_placed.remove((j, k, heatmap_placed[j, k]))
+                    except IndexError:
+                        score[n] = score[n]
+
+            n = n + 1
+
+        totalscore[i] = (sum(score)/n) - (n*heatmap_placed[x,y]) - i[2]
+    return (totalscore)
+
+def endPoints(p_placed,notp_removed,heatmap_removed):
+    totalscore = {}
+    for i in p_placed:
+        x = i[0]
+        y = i[1]
+        # R placed one step
+        # Find whta is being passed on
+        score = [0,0,0]
+        n = 0
+        while len(notp_removed) > 0:
+            for j in range(x-n,x+n+1):
+                for k in range(y-n,y+n+1):
+                    score[n] = score[n] + heatmap_removed[j,k]
+                    if (j,k,heatmap_removed[j,k]) in notp_removed:
+                        notp_placed.remove((j,k,heatmap_removed[j,k]))
+            n = n + 1
+        if n == 0:
+            totalscore[i] = i[2]
+        else:
+            totalscore[i] = i[2] - (sum(score)/n)
+    return (totalscore)
+
 def constrain(inp, minval, maxval):
     if inp>maxval:
         inp = maxval
@@ -75,20 +121,23 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
     bcell_placed = np.where(heatmap_black > change_thresh)
     rcell_removed = np.where(heatmap_red < -1 * change_thresh)
     rcell_placed = np.where(heatmap_red > change_thresh)
-    b_removed = [(x, y) for x, y in zip(bcell_removed[0], bcell_removed[1])]
-    b_placed = [(x, y) for x, y in zip(bcell_placed[0], bcell_placed[1])]
-    r_removed = [(x, y) for x, y in zip(rcell_removed[0], rcell_removed[1])]
-    r_placed = [(x, y) for x, y in zip(rcell_placed[0], rcell_placed[1])]
+    b_removed = [(x, y,heatmap_black[x,y]) for x, y in zip(bcell_removed[0], bcell_removed[1])]
+    b_placed = [(x, y,heatmap_black[x,y]) for x, y in zip(bcell_placed[0], bcell_placed[1])]
+    r_removed = [(x, y,heatmap_red[x,y]) for x, y in zip(rcell_removed[0], rcell_removed[1])]
+    r_placed = [(x, y,heatmap_red[x,y]) for x, y in zip(rcell_placed[0], rcell_placed[1])]
     print 'black removed = ' + str(b_removed)
     print 'black placed = ' + str(b_placed)
     print 'red removed = ' + str(r_removed)
     print 'red placed = ' + str(r_placed)
     ##=========================================================================
 
-    all_moves = None
+     all_moves = None
 
     if turn == 'b':
         # TODO think of how red's info could be used as well in case of a piece capture
+        # Has been used in the top
+        # TODO: Find all possible moves from Chessnut
+
         if len(b_removed)>0 and len(b_placed)>0 :
             b_start = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_removed]
             b_stop = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_placed ]
@@ -240,4 +289,5 @@ if __name__=="__main__":
             cur_board_features = board_features.copy()
             if len(cur_board_features) == 64 and len(prev_board_features) == 64:
                 detectMove(cur_board_features, prev_board_features, chessgame)
+
 

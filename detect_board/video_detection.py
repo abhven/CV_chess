@@ -78,9 +78,6 @@ if __name__=="__main__":
                     cv2.waitKey(0)
 
             # display the result of corner detection
-            cv2.imshow('corners', outp_corners)
-            cv2.waitKey(40)
-
         t_stop = time.time()
         del_t = t_stop - t_start
         print 'Corner Detection :' + str(detection_status['board'])+ '; execution time is ' + str(del_t)
@@ -91,6 +88,10 @@ if __name__=="__main__":
 
         ##====Use the feature vectors to compute a cell move ====
         #chess_move.detectMove()
+        cv2.moveWindow('output', 0, 0)
+        cv2.moveWindow('corners', 0, 200)
+        cv2.imshow('corners', outp_corners)
+        cv2.waitKey(40)
 
         ret, frame = cap.read()
 

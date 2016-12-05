@@ -204,14 +204,14 @@ def get_squares(img, all_corners):
     let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     let.reverse()
     num = ['1', '2', '3', '4', '5', '6', '7', '8']
-    print "\n new iteration"
+    # print "\n new iteration"
     for i in range(8):
         for j in range(8):
             pt1 = (all_corners[i][j][0] , all_corners[i][j][1])
             pt2 = (all_corners[i+1][j][0] , all_corners[i+1][j][1])
             pt3 = (all_corners[i][j+1][0] , all_corners[i][j+1][1])
             pt4 = (all_corners[i+1][j + 1][0] , all_corners[i+1][j + 1][1])
-            print i,j,pt4, pt2,pt3, pt1,' \n'
+            # print i,j,pt4, pt2,pt3, pt1,' \n'
             sq_img=project(img,pt1, pt2,pt3, pt4, 60,60 )
             squares[let[i]+num[j]] = sq_img
     return squares

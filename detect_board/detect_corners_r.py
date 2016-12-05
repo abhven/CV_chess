@@ -351,10 +351,12 @@ if __name__=="__main__":
                         text_color = (200, 240, 240)
                     cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
                                 text_color, 1)
-                    print index +' : ' + scores
+                    # print index +' : ' + scores
                     cv2.waitKey(10)
 
         # display the result of corner detection
         cv2.imshow('corners', outp_corners)
+        cv2.moveWindow('output', 0, 0)
+        cv2.moveWindow('corners', 0, 200)
         cv2.waitKey(0)
 

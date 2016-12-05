@@ -1,3 +1,16 @@
 USAGE:
 python detect_features.py ../chess-board/IMG_0316_2.JPG sample_param.yml
 python video_detection.py ../aruco_larger/File_000.mov sample_param.yml
+
+Debugging:
+1] Corner Detector:
+python detect_corners_r.py ../../AADL_Dataset/IMG_seq2/Scene14.png sample_param.yml
+
+2] chess move detection and heatmap plotting:
+a] To check on a set of images : set the USE_DUMP variable inside chess_move.py to False
+RUN
+python chess_move.py ../../AADL_Dataset/IMG_seq1/Scene1.png ../../AADL_Dataset/IMG_seq1/Scene2.png sample_param.yml
+
+b] To work only on the heatmaps a pre-computed heatmap and chessgame can be used
+set the USE_DUMP variable inside chess_move.py to True
+python chess_move.py heatmap.pckl

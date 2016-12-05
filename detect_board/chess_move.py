@@ -16,6 +16,8 @@ num = ['1', '2', '3', '4', '5', '6', '7', '8']
 colour_min = -0.6
 colour_max = 0.6
 
+change_thresh = 0.18
+
 def constrain(inp, minval, maxval):
     if inp>maxval:
         inp = maxval
@@ -39,16 +41,16 @@ def computeHeatMap(board_features, prev_board_features):
 
             #create the red heat map
             val_red = constrain(diff[0], colour_min, colour_max) ;
-            heatmap_red[i,j] = (val_red - colour_min) /(colour_max - colour_min)
-            heat_red =  heatmap_red[i,j]* 255;
+            heatmap_red[i,j] = diff[0]
+            heat_red =  (val_red - colour_min) /(colour_max - colour_min)* 255;
             m_red[i*cell_size:(i+1)*cell_size,j*cell_size:(j+1)*cell_size,:] = [255-heat_red,0,heat_red]
             text = '%s:%.2f' % (index,val_red)
             cv2.putText(m_red, text, (j*cell_size, i*cell_size + 30), cv2.FONT_HERSHEY_PLAIN, 0.7, (0,0,0))
 
             #create the black heat map
             val_black = constrain(diff[1], colour_min, colour_max);
-            heatmap_black[i,j] = (val_black - colour_min) / (colour_max - colour_min)
-            heat_black = heatmap_black[i,j] * 255;
+            heatmap_black[i,j] = diff[1]
+            heat_black = (val_black - colour_min) / (colour_max - colour_min) * 255;
             m_black[i * cell_size:(i + 1) * cell_size, j * cell_size:(j + 1) * cell_size, :] = [255-heat_black,0,heat_black]
             text = '%s:%.2f' % (index, val_black)
             cv2.putText(m_black, text, (j*cell_size, i*cell_size + 30), cv2.FONT_HERSHEY_PLAIN, 0.7, (0, 0, 0))
@@ -64,6 +66,43 @@ def computeHeatMap(board_features, prev_board_features):
     return [heatmap_red, heatmap_black]
 
 
+## This function will compute all possible moves as obtained from the heatmaps and the turn of a person
+def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
+
+    ## compute all set of additions and subtractions using the change in heatmap
+    ##=========================================================================
+    bcell_removed = np.where(heatmap_black < -1 * change_thresh)
+    bcell_placed = np.where(heatmap_black > change_thresh)
+    rcell_removed = np.where(heatmap_red < -1 * change_thresh)
+    rcell_placed = np.where(heatmap_red > change_thresh)
+    b_removed = [(x, y) for x, y in zip(bcell_removed[0], bcell_removed[1])]
+    b_placed = [(x, y) for x, y in zip(bcell_placed[0], bcell_placed[1])]
+    r_removed = [(x, y) for x, y in zip(rcell_removed[0], rcell_removed[1])]
+    r_placed = [(x, y) for x, y in zip(rcell_placed[0], rcell_placed[1])]
+    print 'black removed = ' + str(b_removed)
+    print 'black placed = ' + str(b_placed)
+    print 'red removed = ' + str(r_removed)
+    print 'red placed = ' + str(r_placed)
+    ##=========================================================================
+
+    all_moves = None
+
+    if turn == 'b':
+        # TODO think of how red's info could be used as well in case of a piece capture
+        if len(b_removed)>0 and len(b_placed)>0 :
+            b_start = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_removed]
+            b_stop = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_placed ]
+            all_moves = [(x[0],y[0],-x[1]*y[1]) for x in b_start for y in b_stop]
+        pass
+    elif turn == 'w':
+        if len(r_removed) > 0 and len(r_placed) > 0:
+            r_start = [(let[i] + num[j], heatmap_red[i, j]) for (i, j) in r_removed]
+            r_stop = [(let[i] + num[j], heatmap_red[i, j]) for (i, j) in r_placed]
+            all_moves = [(x[0], y[0], -x[1] * y[1]) for x in r_start for y in r_stop]
+        pass
+
+    return all_moves
+
 USE_DUMP = True
 
 ## this function will use current and previous states to generate the next legal move
@@ -71,17 +110,21 @@ def detectMove(cur_board_features, prev_board_features, chessgame):
     print(chessgame)
     heatmap_red, heatmap_black = computeHeatMap(cur_board_features, prev_board_features)
 
-    if not USE_DUMP:
+    #TODO determine whose move is it using the chessgame state
+    print computeAllPossibleMoves(heatmap_red, heatmap_black, 'b')
+    print 'All Possible moves using heatmap difference alone'
+
+    if not USE_DUMP and False:
         object = [cur_board_features, prev_board_features, chessgame]
         f = open('heatmap.pckl', 'wb')
         pickle.dump(object, f)
         f.close()
 
-    #detect all moves in the chess-board which have a high probability
+    #TODO detect all moves in the chess-board which have a high probability
 
-    #check if the moves that you detected using CV has a high correspondence with the leagal moves
+    #TODO check if the moves that you detected using CV has a high correspondence with the leagal moves
 
-    #return the most likely move and update the chess_game accordingly OR Flag an Error
+    #TODO return the most likely move and update the chess_game accordingly OR Flag an Error
 
 if __name__=="__main__":
 
@@ -183,7 +226,7 @@ if __name__=="__main__":
                             text_color = (200, 240, 240)
                         cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
                                     text_color, 1)
-                        print index +' : ' + scores
+                        # print index +' : ' + scores
                         cv2.waitKey(10)
 
             ## display the result of corner detection

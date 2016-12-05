@@ -3,6 +3,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
+import time
 
 try:    #initialize the priority Queue
     import Queue as q
@@ -21,13 +22,14 @@ def project(img, C1, C2, C3, C4, L, B):
 
 def cluster(list,dist_threshold):
     bin=[]
+    dist_threshold = np.square(dist_threshold)
     set=[]
     i=1
     for pt in list:
         found=0
         j=0
         for k in bin:
-            dst = distance.euclidean(k, pt)
+            dst = (np.square(k[0][0]-pt[0])+np.square(k[0][1]-pt[1]))
             if dst<dist_threshold:
                 set.append([j,pt])
                 found=1
@@ -74,8 +76,8 @@ def find_xy_grid_length(points):
             ydist.append(dist_matrix[i][j][0])
 
     bins = np.linspace(10, 1000, 400)
-    bins_y,vals_y,_=plt.hist(ydist,bins)
-    bins_x, vals_x, _ = plt.hist(xdist, bins)
+    bins_y,vals_y=np.histogram(ydist,bins)
+    bins_x, vals_x = np.histogram(xdist, bins)
     #plt.show()
 
     for i in range(0, len(bins_y)):
@@ -202,7 +204,7 @@ def corner_detect(img_rgb): # returns the list of corners detected from the imag
 def get_squares(img, all_corners):
     squares= {}
     let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    let.reverse()
+    #let.reverse()
     num = ['1', '2', '3', '4', '5', '6', '7', '8']
     # print "\n new iteration"
     for i in range(8):
@@ -234,7 +236,7 @@ def corner_detector_assisted(img, ref):
     else:
         start=0
 
-
+    print  ref[0]
     corner, grid_size,y_grid,x_grid= corner_detect(img_rgb)
     dat=[]
     data=[]
@@ -285,28 +287,141 @@ def corner_detector_assisted(img, ref):
             print(all_corners[1][1])
             all_corners = np.array(all_corners)
             print(all_corners[1][1][0],all_corners[1][1][1])
-            if ref[0] == 1:
-                all_corners = np.swapaxes(all_corners, 1, 0)
-                all_corners = np.flipud(all_corners)
-            elif ref[0] == 3:
+
+            if ref[0] == 3:
                 all_corners = np.swapaxes(all_corners, 1, 0)
             elif ref[0] == 2:
                 all_corners = np.flipud(all_corners)
-                all_corners = np.swapaxes(all_corners, 1, 0)
-                all_corners = np.flipud(all_corners)
             elif ref[0] == 0:  # looks fixed
-                all_corners = np.swapaxes(all_corners, 1, 0)
                 all_corners = np.fliplr(all_corners)
+                all_corners = np.flipud(all_corners)
 
-            # for i in range(9):
-            #     for j in range(9):
-            #         pt=all_corners[i][j]
-            #         # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
-            #         cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
-            #                     (255, 0, 0), 1)
-            #         print 'drawing corner information'
-            #         cv2.waitKey(10)
+            for i in range(9):
+                for j in range(9):
+                    pt=all_corners[i][j]
+                    # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                    cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                (255, 0, 0), 1)
+                    #print 'drawing corner information'
+                    cv2.waitKey(10)
     return (error_flag, img_rgb,all_corners)
+
+
+
+def fast_corner_detector(img, ref):
+    t_start = time.time()
+    img_rgb=img.copy()
+    _, h, _=img_rgb.shape[::-1]
+    lower=  math.floor(h/30 )
+    higher = math.floor(h*29/30)
+    image_flag = 1 # flag for image quality, 1 is good image
+    dat = []
+    data = []
+    error_flag = 0
+    all_corners=[[(0, 0) for i in range(9)] for j in range (9)]
+    corner, grid_size, y_grid, x_grid = corner_detect(img_rgb)
+
+    if x_grid <  h/12 or y_grid <  h/12 or x_grid >  h/9 or y_grid >  h/9 or len(corner)<28 : # grid wont fit in image or too few corners
+        image_flag =0
+        print image_flag
+    if image_flag:
+        flag11 = 0; flag17=0; flag71=0; flag77=0
+        for pt in corner:
+            xgrid= int(pt[0]/(h/9.6))
+            ygrid = int(pt[1] / (h/9.6))
+            if xgrid==1 and ygrid==1:
+                flag11=flag11+1
+            elif xgrid==2 and ygrid==1:
+                flag11=flag11+1
+            elif xgrid == 1 and ygrid == 2:
+                flag11 = flag11 + 1
+
+            elif xgrid==1 and ygrid==7:
+                flag17=flag17+1
+            elif xgrid == 2 and ygrid == 7:
+                flag17 = flag17+1
+            elif xgrid == 1 and ygrid == 6:
+                flag17 = flag17+1
+
+            elif xgrid==7 and ygrid==1:
+                flag71 = flag71+1
+            elif xgrid == 6 and ygrid == 1:
+                flag71 = flag71 + 1
+            elif xgrid==7 and ygrid==2:
+                flag71 = flag71+1
+
+            elif xgrid==7 and ygrid==7:
+                flag77 = flag77+1
+            elif xgrid==6 and ygrid==7:
+                flag77 = flag77+1
+            elif xgrid == 7 and ygrid == 6:
+                flag77 = flag77 + 1
+
+        if flag11==3:
+            start = [lower, lower]
+        elif flag17==3: #fixed
+            start = [lower, higher]
+        elif flag71==3:#fixed
+            start = [higher, lower]
+
+        elif flag77==3:
+            start = [higher, higher]
+
+        else:
+            error_flag=1
+
+
+        if error_flag ==0:
+            dat=[]
+            for pt in corner:
+                dist = distance.euclidean(start, pt)
+                dat.append([dist, pt[0], pt[1]])
+            dat.sort()
+            ref_st = dat[0]
+
+            for pt in dat:
+                x_val=int(round(math.fabs(ref_st[1]-pt[1])/x_grid)+1)
+                y_val = int(round(math.fabs(ref_st[2] - pt[2])/y_grid)+1)
+                data.append([pt[0], pt[1], pt[2], x_val, y_val])
+            new_data = synthetic_corner(data)
+
+            for pt in new_data:
+                if pt[1]>higher or pt[2]> higher or pt[1]< lower or pt[2]< lower:
+                    error_flag=1;
+
+            for pt in data:
+                all_corners[pt[3]][pt[4]] = (pt[1], pt[2])
+            for pt in new_data:
+                all_corners[pt[3]][pt[4]] = (pt[1], pt[2])
+
+            if not flag11 == 3:
+                if flag17==3:
+                    all_corners = np.fliplr(all_corners)
+                elif flag71==3:
+                    all_corners = np.flipud(all_corners)
+                elif flag77==3: # looks fixed
+                    all_corners = np.fliplr(all_corners)
+                    all_corners = np.flipud(all_corners)
+
+            for i in range(9):
+                for j in range(9):
+                    pt = all_corners[i][j]
+                    cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                    cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                (255, 0, 0), 1)
+                    # print 'drawing corner information'
+                    #cv2.waitKey(10)
+        else:
+            print "\nCorner detection failed"
+
+    else:
+        print "\n Bad image aspect ratio"
+
+    t_stop = time.time()
+    del_t = t_stop - t_start
+    print "corner detector time:" ,del_t
+    return (image_flag, img_rgb,all_corners)
+
 
 
 

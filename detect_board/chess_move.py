@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import time
 import sys
+import copy
 
 import cellscore as cs
 from corner_detector import *
@@ -23,40 +24,54 @@ def startPoints(p_removed,notp_placed,heatmap_placed):
     for i in p_removed:
         x = i[0]
         y = i[1]
+        notp_placed_copy = copy.copy(notp_placed)
+
         # R placed one step
         # Find whta is being passed on
         score = [0,0,0]
         n = 1
-        while len(notp_placed) > 0:
+        while len(notp_placed_copy) > 0:
             for j in range(x-n,x+n+1):
                 for k in range(y-n,y+n+1):
                     try:
-                        score[n] = score[n] + heatmap_placed[j,k]
-                        if (j, k, heatmap_placed[j, k]) in notp_placed:
-                            notp_placed.remove((j, k, heatmap_placed[j, k]))
+                        if heatmap_placed[j,k] > 0:
+                            score[n] = score[n] + heatmap_placed[j,k]
+                            if (j, k, heatmap_placed[j, k]) in notp_placed_copy:
+                                notp_placed_copy.remove((j, k, heatmap_placed[j, k]))
                     except IndexError:
                         score[n] = score[n]
-
             n = n + 1
-
-        totalscore[i] = (sum(score)/n) - (n*heatmap_placed[x,y]) - i[2]
+            print n
+        if n == 1:
+            totalscore[i] = - i[2]
+        else:
+            totalscore[i] = (sum(score)/n) - (n*heatmap_placed[x,y]) - i[2]
     return (totalscore)
 
 def endPoints(p_placed,notp_removed,heatmap_removed):
     totalscore = {}
+
+    # Have to save notp_removed
+    notp_removed_copy = copy.copy(notp_removed)
     for i in p_placed:
         x = i[0]
         y = i[1]
+        notp_removed_copy = copy.copy(notp_removed)
+
         # R placed one step
         # Find whta is being passed on
         score = [0,0,0]
         n = 0
-        while len(notp_removed) > 0:
+        while len(notp_removed_copy) > 0:
             for j in range(x-n,x+n+1):
                 for k in range(y-n,y+n+1):
-                    score[n] = score[n] + heatmap_removed[j,k]
-                    if (j,k,heatmap_removed[j,k]) in notp_removed:
-                        notp_placed.remove((j,k,heatmap_removed[j,k]))
+                    try:
+                        if heatmap_removed[j,k] < 0:
+                            score[n] = score[n] + heatmap_removed[j,k]
+                            if (j,k,heatmap_removed[j,k]) in notp_removed_copy:
+                                notp_removed_copy.remove((j,k,heatmap_removed[j,k]))
+                    except IndexError:
+                        pass
             n = n + 1
         if n == 0:
             totalscore[i] = i[2]
@@ -130,6 +145,12 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
     print 'red removed = ' + str(r_removed)
     print 'red placed = ' + str(r_placed)
     ##=========================================================================
+    bcell_start = startPoints(b_removed, r_placed, heatmap_red)
+    bcell_end = endPoints(b_placed, r_removed, heatmap_red)
+
+    print bcell_start
+    print bcell_end
+
 
     all_moves = None
 

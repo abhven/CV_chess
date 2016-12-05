@@ -131,7 +131,7 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
     print 'red placed = ' + str(r_placed)
     ##=========================================================================
 
-     all_moves = None
+    all_moves = None
 
     if turn == 'b':
         # TODO think of how red's info could be used as well in case of a piece capture

@@ -202,7 +202,7 @@ def corner_detect(img_rgb): # returns the list of corners detected from the imag
 def get_squares(img, all_corners):
     squares= {}
     let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    let.reverse()
+    #let.reverse()
     num = ['1', '2', '3', '4', '5', '6', '7', '8']
     # print "\n new iteration"
     for i in range(8):
@@ -285,27 +285,23 @@ def corner_detector_assisted(img, ref):
             print(all_corners[1][1])
             all_corners = np.array(all_corners)
             print(all_corners[1][1][0],all_corners[1][1][1])
-            if ref[0] == 1:
-                all_corners = np.swapaxes(all_corners, 1, 0)
-                all_corners = np.flipud(all_corners)
-            elif ref[0] == 3:
+
+            if ref[0] == 3:
                 all_corners = np.swapaxes(all_corners, 1, 0)
             elif ref[0] == 2:
                 all_corners = np.flipud(all_corners)
-                all_corners = np.swapaxes(all_corners, 1, 0)
-                all_corners = np.flipud(all_corners)
             elif ref[0] == 0:  # looks fixed
-                all_corners = np.swapaxes(all_corners, 1, 0)
                 all_corners = np.fliplr(all_corners)
+                all_corners = np.flipud(all_corners)
 
-            # for i in range(9):
-            #     for j in range(9):
-            #         pt=all_corners[i][j]
-            #         # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
-            #         cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
-            #                     (255, 0, 0), 1)
-            #         print 'drawing corner information'
-            #         cv2.waitKey(10)
+            for i in range(9):
+                for j in range(9):
+                    pt=all_corners[i][j]
+                    # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                    cv2.putText(img_rgb, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                                (255, 0, 0), 1)
+                    #print 'drawing corner information'
+                    cv2.waitKey(10)
     return (error_flag, img_rgb,all_corners)
 
 

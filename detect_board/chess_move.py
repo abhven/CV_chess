@@ -151,7 +151,6 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
     print bcell_start
     print bcell_end
 
-
     all_moves = None
 
     if turn == 'b':
@@ -160,29 +159,37 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
         # TODO: Find all possible moves from Chessnut
 
         if len(b_removed)>0 and len(b_placed)>0 :
-            b_start = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_removed]
-            b_stop = [(let[i]+num[j], heatmap_black[i,j])  for (i,j) in b_placed ]
+            b_start = [(let[i]+num[j], s)  for (i,j,s) in b_removed]
+            b_stop = [(let[i]+num[j], s)  for (i,j,s) in b_placed ]
             all_moves = [(x[0],y[0],-x[1]*y[1]) for x in b_start for y in b_stop]
         pass
     elif turn == 'w':
         if len(r_removed) > 0 and len(r_placed) > 0:
-            r_start = [(let[i] + num[j], heatmap_red[i, j]) for (i, j) in r_removed]
-            r_stop = [(let[i] + num[j], heatmap_red[i, j]) for (i, j) in r_placed]
+            r_start = [(let[i] + num[j], s) for (i, j, s) in r_removed]
+            r_stop = [(let[i] + num[j], s) for (i, j, s) in r_placed]
             all_moves = [(x[0], y[0], -x[1] * y[1]) for x in r_start for y in r_stop]
         pass
 
     return all_moves
 
-USE_DUMP = True
+USE_DUMP = False
 
 ## this function will use current and previous states to generate the next legal move
 def detectMove(cur_board_features, prev_board_features, chessgame):
     print(chessgame)
+    move = None
     heatmap_red, heatmap_black = computeHeatMap(cur_board_features, prev_board_features)
 
     #TODO determine whose move is it using the chessgame state
-    print computeAllPossibleMoves(heatmap_red, heatmap_black, 'b')
+    all_moves = computeAllPossibleMoves(heatmap_red, heatmap_black, 'w')
+
     print 'All Possible moves using heatmap difference alone'
+    print all_moves
+
+    if all_moves is not None:
+        for possible_move in all_moves:
+            ## compare it with all legal moves
+            pass
 
     if not USE_DUMP and False:
         object = [cur_board_features, prev_board_features, chessgame]
@@ -195,6 +202,7 @@ def detectMove(cur_board_features, prev_board_features, chessgame):
     #TODO check if the moves that you detected using CV has a high correspondence with the leagal moves
 
     #TODO return the most likely move and update the chess_game accordingly OR Flag an Error
+    return move
 
 if __name__=="__main__":
 
@@ -289,12 +297,12 @@ if __name__=="__main__":
                         red_score = R/3600.0
                         black_score = B/3600.0
                         board_features[index] = [red_score, black_score]
-                        scores = '[%.2f,%.2f]' % (red_score, black_score)
+                        scores = '%s[%.2f,%.2f]' % (index,red_score, black_score)
                         if (i+j)%2 ==0:
                             text_color = (220,40,40)
                         else:
-                            text_color = (200, 240, 240)
-                        cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
+                            text_color = (200,240,240)
+                        cv2.putText(outp_corners, scores, (pt[1], pt[0]+30), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
                                     text_color, 1)
                         # print index +' : ' + scores
                         cv2.waitKey(10)

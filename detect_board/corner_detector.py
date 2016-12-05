@@ -215,7 +215,7 @@ def get_squares(img, all_corners):
             pt4 = (all_corners[i+1][j + 1][0] , all_corners[i+1][j + 1][1])
             # print i,j,pt4, pt2,pt3, pt1,' \n'
             sq_img=project(img,pt1, pt2,pt3, pt4, 60,60 )
-            squares[let[i]+num[j]] = sq_img
+            squares[let[j]+num[i]] = sq_img
     return squares
 
 def corner_detector_assisted(img, ref):

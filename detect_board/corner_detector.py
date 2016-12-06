@@ -304,6 +304,8 @@ def corner_detector_assisted(img, ref):
                                 (255, 0, 0), 1)
                     #print 'drawing corner information'
                     cv2.waitKey(10)
+    else:
+        error_flag = 1
     return (error_flag, img_rgb,all_corners)
 
 

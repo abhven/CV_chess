@@ -73,7 +73,7 @@ if __name__=="__main__":
                 detection_status['board'] = True;
             else:
                 detection_status['board'] = False;
-            print 'Board Detection :' + str(detection_status['board']) + ' execution time : ' + str(del_t)
+            print 'Board Detection :' + str(detection_status['board']) + '; Execution time : ' + str(del_t)
             ##============================================
 
             ##====Executing the corner detection and updation =====
@@ -89,7 +89,10 @@ if __name__=="__main__":
                 detection_status['corners'] = not corner_error_flag
                 all_colours = []
                 # all_colours = load_colours.parseCSVMatrix(param_file, 4)
+            t_stop = time.time()
+            del_t = t_stop - t_start
             ##============================================
+            print 'Corner Detection :' + str(detection_status['corners']) + '; Execution time : ' + str(del_t)
 
             ##======Generate Cell Features========================
             if detection_status['corners']:

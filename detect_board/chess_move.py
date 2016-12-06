@@ -123,7 +123,6 @@ def computeHeatMap(board_features, prev_board_features):
     cv2.imshow('Black Heatmap', m_black)
     cv2.moveWindow('Red Heatmap', 640,0)
     cv2.moveWindow('Black Heatmap', 1120, 0)
-    cv2.waitKey(0)
     return [heatmap_red, heatmap_black]
 
 
@@ -186,9 +185,11 @@ def detectMove(cur_board_features, prev_board_features, chessgame):
     print 'All Possible moves using heatmap difference alone'
     print all_moves
 
+    cv2.waitKey(0)
+
     if all_moves is not None:
         for possible_move in all_moves:
-            ## compare it with all legal moves
+            ## TODO compare it with all legal moves
             pass
 
     if not USE_DUMP and False:

@@ -17,7 +17,7 @@ num = ['1', '2', '3', '4', '5', '6', '7', '8']
 colour_min = -0.6
 colour_max = 0.6
 
-change_thresh = 0.18
+change_thresh = 0.10
 
 def startPoints(p_removed,notp_placed,heatmap_placed):
     totalscore = {}
@@ -39,7 +39,7 @@ def startPoints(p_removed,notp_placed,heatmap_placed):
                             if (j, k, heatmap_placed[j, k]) in notp_placed_copy:
                                 notp_placed_copy.remove((j, k, heatmap_placed[j, k]))
                     except IndexError:
-                        score[n] = score[n]
+                        pass
             n = n + 1
             print n
         if n == 1:
@@ -144,11 +144,7 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
     print 'red removed = ' + str(r_removed)
     print 'red placed = ' + str(r_placed)
     ##=========================================================================
-    bcell_start = startPoints(b_removed, r_placed, heatmap_red)
-    bcell_end = endPoints(b_placed, r_removed, heatmap_red)
 
-    print bcell_start
-    print bcell_end
 
     all_moves = None
 
@@ -156,17 +152,22 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
         # TODO think of how red's info could be used as well in case of a piece capture
         # Has been used in the top
         # TODO: Find all possible moves from Chessnut
+        bcell_start = startPoints(b_removed, r_placed, heatmap_red)
+        bcell_end = endPoints(b_placed, r_removed, heatmap_red)
 
         if len(b_removed)>0 and len(b_placed)>0 :
-            b_start = [(let[i]+num[j], s)  for (i,j,s) in b_removed]
-            b_stop = [(let[i]+num[j], s)  for (i,j,s) in b_placed ]
+            b_start = [(let[i]+num[j], bcell_start[i,j,s])  for (i,j,s) in b_removed]
+            b_stop = [(let[i]+num[j], bcell_end[i,j,s])  for (i,j,s) in b_placed ]
             all_moves = [(x[0],y[0],-x[1]*y[1]) for x in b_start for y in b_stop]
         pass
     elif turn == 'w':
+        rcell_start = startPoints(r_removed, b_placed, heatmap_black)
+        rcell_end = endPoints(r_placed,b_removed, heatmap_black)
+
         if len(r_removed) > 0 and len(r_placed) > 0:
-            r_start = [(let[i] + num[j], s) for (i, j, s) in r_removed]
-            r_stop = [(let[i] + num[j], s) for (i, j, s) in r_placed]
-            all_moves = [(x[0], y[0], -x[1] * y[1]) for x in r_start for y in r_stop]
+            r_start = [(let[i] + num[j],rcell_start[i,j,s]) for (i, j, s) in r_removed]
+            r_stop = [(let[i] + num[j], rcell_end[i,j,s]) for (i, j, s) in r_placed]
+            all_moves = [(x[0], y[0], x[1]*y[1]) for x in r_start for y in r_stop]
         pass
 
     return all_moves

@@ -85,7 +85,7 @@ if __name__=="__main__":
                 # cv2.waitKey(0)
 
                 # run the main code for corner detection
-                [corner_error_flag, outp_corners, all_corners] = corner_detector_assisted(res_board[0], res_board[4])
+                [corner_error_flag, outp_corners, all_corners] = fast_corner_detector(res_board[0], res_board[4])
                 detection_status['corners'] = not corner_error_flag
                 all_colours = []
                 # all_colours = load_colours.parseCSVMatrix(param_file, 4)

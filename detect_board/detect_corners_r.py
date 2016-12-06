@@ -8,19 +8,21 @@ import ar_marker as ar
 from corner_detector import *
 import cellscore as cs
 
+marker_size = 44.0
+chess_cell_size =56.0
+
 warped_board_size = 600
 a1_ = 39.2
-a2_ = 21.8
 b_ = 508.2
 offset_ = 45
 
 off_buf = 40
 epsilon = 1e-3
 a1 = a1_/b_*warped_board_size
-a2 = a2_/b_*warped_board_size
 offset = offset_/b_*warped_board_size + off_buf
 b = warped_board_size
 
+print a1
 
 def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
 
@@ -154,16 +156,23 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
     # [H, opt] = cv2.findHomography(real_coord[1:], img_coord[1:]);
     [H, opt] = cv2.findHomography(img_coord[1:], real_coord[1:]);
 
-    if real_coord.shape[0] > 1 :
-        point = np.array([[[real_coord[1][0], real_coord[1][1]]]])
+    repoj_error = 0
+    for i in range(1,real_coord.shape[0]):
+        real_point = np.array([[[real_coord[i][0], real_coord[i][1]]]])
+        img_point = img_coord[i,:]
+        proj = cv2.perspectiveTransform(real_point, np.linalg.inv(H))
 
-        if debug_mode :
-            print point
-            proj = cv2.perspectiveTransform(point, H)
+        if debug_mode:
+            print real_point
             print proj
-            cv2.circle(outp_dbg, (int(proj[0][0][0]), int(proj[0][0][1])), 2, (0, 0, 240))
-
-    if debug_mode:
+            repoj_error += np.linalg.norm(proj-img_point)
+        cv2.circle(outp_dbg, (int(proj[0][0][0]), int(proj[0][0][1])), 4, (0, 0, 240),2)
+        cv2.circle(outp_dbg, (int(img_point[0]), int(img_point[1])), 4, (240, 0, 0), 2)
+    if debug_mode :
+        print 'Reprojection error: %f' % (repoj_error)
+        if draw_mode:
+            cv2.imshow('outp_debg', outp_dbg)
+            cv2.waitKey(0)
         print "H matrix is "
         print H
         print type(H)
@@ -194,7 +203,8 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
         if draw_mode:
             cv2.putText(res1[4], 'R1score = ' + str(res1[2]), (40, 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (240, 0, 0), 2)
-            cv2.imshow('STG1_dbg', cv2.pyrDown(res1[4]))
+            # cv2.imshow('STG1_dbg', cv2.pyrDown(res1[4]))
+            cv2.imshow('STG1_dbg', res1[4])
 
     if res1[1] is not None:
 
@@ -320,41 +330,45 @@ if __name__=="__main__":
         detection_status['corners'] = not corner_error_flag
         all_colours = []
         # all_colours = load_colours.parseCSVMatrix(param_file, 4)
+    t_stop = time.time()
+    del_t = t_stop - t_start
+    ##============================================
+    print 'Corner Detection :' + str(detection_status['corners']) + '; Execution time : ' + str(del_t)
 
-        ##To see the squares
-        if corner_error_flag == False:
-            squares = get_squares(res_board[0], all_corners)
-            # print(squares)
-            # Displays individual squares
-            for i in squares:
-                pass
-                # cv2.imshow(i, squares[i])
-                # print i
-                # cv2.waitKey(30)
-                # cv2.waitKey(0)
-            for i in range(8):
-                for j in range(8):
-                    index = let[i]+num[j]
-                    cell_img = squares[index]
+    ##======Generate Cell Features========================
+    if detection_status['corners']:
+        squares = get_squares(res_board[0], all_corners)
+        # print(squares)
+        # Displays individual squares
+        for i in squares:
+            pass
+            # cv2.imshow(i, squares[i])
+            # print i
+            # cv2.waitKey(30)
+            # cv2.waitKey(0)
+        for i in range(8):
+            for j in range(8):
+                index = let[i]+num[j]
+                cell_img = squares[index]
 
-                    # Send correct cell colour and the piece information
-                    (W,G,R,B) = cs.computeCellColourScore(cell_img, 'w', 'p', all_colours)
-                    pt=all_corners[i][j]
-                    # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
-                    cv2.putText(outp_corners, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
-                                (255, 0, 0), 1)
-                    red_score = R/3600.0
-                    black_score = B/3600.0
-                    board_features[index] = [red_score, black_score]
-                    scores = '[%.2f,%.2f]' % (red_score, black_score)
-                    if (i+j)%2 ==0:
-                        text_color = (220,40,40)
-                    else:
-                        text_color = (200, 240, 240)
-                    cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
-                                text_color, 1)
-                    # print index +' : ' + scores
-                    cv2.waitKey(10)
+                # Send correct cell colour and the piece information
+                (W,G,R,B) = cs.computeCellColourScore(cell_img, 'w', 'p', all_colours)
+                pt=all_corners[i][j]
+                # cv2.circle(img_rgb, (pt[0], pt[1]), 5, (0, 255, 0), -1)
+                cv2.putText(outp_corners, str(i) + ' ' + str(j), (pt[0], pt[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1,
+                            (255, 0, 0), 1)
+                red_score = R/3600.0
+                black_score = B/3600.0
+                board_features[index] = [red_score, black_score]
+                scores = '[%.2f,%.2f]' % (red_score, black_score)
+                if (i+j)%2 ==0:
+                    text_color = (220,40,40)
+                else:
+                    text_color = (200, 240, 240)
+                cv2.putText(outp_corners, scores, (pt[0], pt[1]-20), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
+                            text_color, 1)
+                # print index +' : ' + scores
+                cv2.waitKey(10)
 
         # display the result of corner detection
         cv2.imshow('corners', outp_corners)

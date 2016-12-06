@@ -422,7 +422,7 @@ def fast_corner_detector(img, ref):
     t_stop = time.time()
     del_t = t_stop - t_start
     print "corner detector time:" ,del_t
-    return (image_flag, img_rgb,all_corners)
+    return (not (image_flag and (not error_flag)), img_rgb,all_corners)
 
 
 

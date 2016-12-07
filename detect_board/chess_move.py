@@ -17,7 +17,7 @@ num = ['1', '2', '3', '4', '5', '6', '7', '8']
 colour_min = -0.6
 colour_max = 0.6
 
-change_thresh = 0.10
+change_thresh = 0.05
 
 def startPoints(p_removed,notp_placed,heatmap_placed):
     totalscore = {}
@@ -25,7 +25,8 @@ def startPoints(p_removed,notp_placed,heatmap_placed):
         x = i[0]
         y = i[1]
         notp_placed_copy = copy.copy(notp_placed)
-
+        # if (j, k, heatmap_placed[j, k]) in notp_placed_copy:
+        #     notp_placed_copy.remove((x, y, heatmap_placed[x, y]))
         # R placed one step
         # Find whta is being passed on
         score = [0,0,0]
@@ -41,7 +42,7 @@ def startPoints(p_removed,notp_placed,heatmap_placed):
                     except IndexError:
                         pass
             n = n + 1
-            print n
+            print n,notp_placed_copy
         if n == 1:
             totalscore[i] = - i[2]
         else:
@@ -78,6 +79,18 @@ def endPoints(p_placed,notp_removed,heatmap_removed):
         else:
             totalscore[i] = i[2] - (sum(score)/n)
     return (totalscore)
+
+def validMove(chessgame,moves):
+    moves_copy = copy.copy(moves)
+    valid_moves = chessgame.get_moves()
+    while len(moves_copy) > 0:
+        best_move = max(moves_copy)
+        notation = best_move[1] + best_move[2]
+        if notation in valid_moves:
+            return notation
+        else:
+            moves_copy.remove(best_move)
+    return None
 
 def constrain(inp, minval, maxval):
     if inp>maxval:
@@ -158,7 +171,7 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
         if len(b_removed)>0 and len(b_placed)>0 :
             b_start = [(let[i]+num[j], bcell_start[i,j,s])  for (i,j,s) in b_removed]
             b_stop = [(let[i]+num[j], bcell_end[i,j,s])  for (i,j,s) in b_placed ]
-            all_moves = [(x[0],y[0],-x[1]*y[1]) for x in b_start for y in b_stop]
+            all_moves = [(x[1]*y[1],x[0],y[0]) for x in b_start for y in b_stop]
         pass
     elif turn == 'w':
         rcell_start = startPoints(r_removed, b_placed, heatmap_black)
@@ -167,7 +180,7 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
         if len(r_removed) > 0 and len(r_placed) > 0:
             r_start = [(let[i] + num[j],rcell_start[i,j,s]) for (i, j, s) in r_removed]
             r_stop = [(let[i] + num[j], rcell_end[i,j,s]) for (i, j, s) in r_placed]
-            all_moves = [(x[0], y[0], x[1]*y[1]) for x in r_start for y in r_stop]
+            all_moves = [(x[1]*y[1],x[0], y[0]) for x in r_start for y in r_stop]
         pass
 
     return all_moves
@@ -175,23 +188,23 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
 USE_DUMP = False
 
 ## this function will use current and previous states to generate the next legal move
-def detectMove(cur_board_features, prev_board_features, chessgame):
+def detectMove(cur_board_features, prev_board_features, chessgame,move_count):
     print(chessgame)
     move = None
     heatmap_red, heatmap_black = computeHeatMap(cur_board_features, prev_board_features)
 
     #TODO determine whose move is it using the chessgame state
-    all_moves = computeAllPossibleMoves(heatmap_red, heatmap_black, 'w')
-
+    if (move_count % 2)== 0:
+        all_moves = computeAllPossibleMoves(heatmap_red, heatmap_black, 'w')
+    else:
+        all_moves = computeAllPossibleMoves(heatmap_red, heatmap_black, 'b')
     print 'All Possible moves using heatmap difference alone'
     print all_moves
 
     cv2.waitKey(0)
 
     if all_moves is not None:
-        for possible_move in all_moves:
-            ## TODO compare it with all legal moves
-            pass
+        move = validMove(chessgame, all_moves)
 
     if not USE_DUMP and False:
         object = [cur_board_features, prev_board_features, chessgame]
@@ -319,6 +332,6 @@ if __name__=="__main__":
             prev_board_features = cur_board_features.copy()
             cur_board_features = board_features.copy()
             if len(cur_board_features) == 64 and len(prev_board_features) == 64:
-                detectMove(cur_board_features, prev_board_features, chessgame)
+                move = detectMove(cur_board_features, prev_board_features, chessgame)
 
 

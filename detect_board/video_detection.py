@@ -13,7 +13,7 @@ from Chessnut import Game
 
 let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 num = ['1', '2', '3', '4', '5', '6', '7', '8']
-
+move_count = 0
 def generateStatusMessage():
     status = ''
     status += 'F' + str(frame_index) + ', '
@@ -140,7 +140,12 @@ if __name__=="__main__":
                 prev_board_features = cur_board_features.copy()
                 cur_board_features = board_features.copy()
                 if len(cur_board_features) == 64 and len(prev_board_features) == 64:
-                    chess_move.detectMove(cur_board_features, prev_board_features, chessgame)
+                    move = chess_move.detectMove(cur_board_features, prev_board_features, chessgame,move_count)
+                    print(move)
+                    if not(move == None):
+                        chessgame.apply_move(move)
+                        move_count = move_count+1
+
 
         ## display the result of corner detection
         input_img = cv2.pyrDown(cv2.pyrDown(frame))

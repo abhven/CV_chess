@@ -3,6 +3,7 @@ import numpy as np
 import sys
 import time
 
+import chess
 import detect_corners_r as dc
 from corner_detector import *
 import cellscore as cs
@@ -10,6 +11,8 @@ import chess_move
 from os import path
 sys.path.append('../Chessnut')
 from Chessnut import Game
+
+
 
 let = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 num = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -41,7 +44,7 @@ if __name__=="__main__":
     cv2.namedWindow('corners', cv2.WINDOW_AUTOSIZE)
     chessgame = Game()
     print(chessgame)
-
+    chessboard = chess.Board()
     img_file = sys.argv[1];
     param_file = sys.argv[2];
 
@@ -150,6 +153,7 @@ if __name__=="__main__":
                     if not(move == None):
                         chessgame.apply_move(move)
                         move_count = move_count+1
+                        print(chess.Board(str(chessgame)))
 
 
         ## display the result of corner detection

@@ -48,8 +48,8 @@ if __name__=="__main__":
     cap = cv2.VideoCapture(img_file)
     ret, frame = cap.read()
 
-    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (692, 692))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter('output.avi', fourcc, 25.0, (1920, 1080))
 
     if not ret:
         print 'can\'t open the video'
@@ -60,14 +60,25 @@ if __name__=="__main__":
         ##==== Print some basic info for each iteration ====
         frame_index += 1
         # input_img = cv2.pyrDown(cv2.pyrDown(frame))
-        input_img = cv2.pyrDown(frame)
+        if frame_index == 1:
+            input_img = frame
+            input_img[:,:,:] = 0
+        img_in = cv2.pyrDown(frame)
+        input_img[0:500, 0:900] = img_in[0:500,0:900]
         status_msg = generateStatusMessage()
-        cv2.putText(input_img, status_msg, (10, 250), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.7, (0, 0, 255))
-        cv2.imshow('input', input_img)
+        cv2.putText(input_img, status_msg, (10, 500), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.7, (0, 0, 255))
+
         # print "Frame : " + str(frame_index)
 
         if engage_detection:
             ##====Executing the board detection here =====
+            input_img[700:900, 0:500] = 0
+            status_msg = 'Key Pressed'
+            cv2.putText(input_img, status_msg, (10, 750), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 240, 240), 2)
+            status_msg = 'Detecting Game'
+            cv2.putText(input_img, status_msg, (10, 850), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 240, 240), 2)
+            cv2.imshow('input', input_img)
+            cv2.waitKey(5)
             t_start = time.time()
             res_board = dc.multiStageDetection(frame, param_file)
             t_stop = time.time()
@@ -75,9 +86,9 @@ if __name__=="__main__":
 
             # use threshold to compute success of the stage
             if res_board[1] > 40:
-                detection_status['board'] = True;
+                detection_status['board'] = True
             else:
-                detection_status['board'] = False;
+                detection_status['board'] = False
             print 'Board Detection :' + str(detection_status['board']) + '; Execution time : ' + str(del_t)
             ##============================================
 
@@ -85,11 +96,16 @@ if __name__=="__main__":
             t_start = time.time()
             if detection_status['board']:
                 # Display the res_boardult of board detection if successful
-                cv2.imshow('output', res_board[0])
-                # out.write(res_board[0])
+                result_board = cv2.pyrDown(res_board[0])
+                rows = result_board.shape[0]
+                cols = result_board.shape[1]
+                print result_board.shape
+                # input_img[0:rows,0:cols] = result_board
+                cv2.imshow('output', result_board)
+                # out.write(input_img)
                 # cv2.waitKey(0)
 
-                # run the main code for corner detection
+                #run the main code for corner detection
                 [corner_error_flag, outp_corners, all_corners] = fast_corner_detector(res_board[0], res_board[4])
                 detection_status['corners'] = not corner_error_flag
                 all_colours = []
@@ -103,7 +119,15 @@ if __name__=="__main__":
             if detection_status['corners']:
                 engage_detection = False
                 ## Display the corner results if successful
-                cv2.imshow('corners', outp_corners)
+                input_img[700:900,0:500] = 0
+                status_msg = 'Board Corners Detected'
+                cv2.putText(input_img, status_msg, (10, 800), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 240, 240), 2)
+                cv2.waitKey(5)
+                result_board = cv2.pyrDown(outp_corners)
+                rows = result_board.shape[0]
+                cols = result_board.shape[1]
+                input_img[500:500+rows, 554:554+cols] = result_board
+                # cv2.imshow('corners', outp_corners)
                 squares = get_squares(res_board[0], all_corners)
                 # print(squares)
                 # Displays individual squares
@@ -145,18 +169,22 @@ if __name__=="__main__":
                 prev_board_features = cur_board_features.copy()
                 cur_board_features = board_features.copy()
                 if len(cur_board_features) == 64 and len(prev_board_features) == 64:
-                    move = chess_move.detectMove(cur_board_features, prev_board_features, chessgame,move_count)
-                    print(move)
-                    if not(move == None):
+                    move = chess_move.detectMove(cur_board_features, prev_board_features, chessgame, move_count, input_img)
+                    print move
+                    if move is not None:
                         chessgame.apply_move(move)
-                        move_count = move_count+1
-
+                        move_count = move_count + 1
+                        status_msg = 'Move %d : %s' % (move_count, move)
+                    else:
+                        status_msg = 'Detection Failed '
+                    cv2.putText(input_img, status_msg, (10, 725), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 240, 240), 2)
 
         ## display the result of corner detection
-
+        out.write(input_img)
+        cv2.imshow('input', input_img)
         cv2.moveWindow('input', 0, 0)
         cv2.moveWindow('output', 0, 270)
-        cv2.moveWindow('corners', 0, 400)
+        # cv2.moveWindow('corners', 0, 400)
         char_input = cv2.waitKey(40)
 
         if char_input & 0xFF == ord('e'):
@@ -167,4 +195,7 @@ if __name__=="__main__":
         ret, frame = cap.read()
 
     print 'Exiting'
+    cap.release()
+    cv2.destroyAllWindows()
+    out.release()
     cv2.waitKey(100)

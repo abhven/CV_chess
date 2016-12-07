@@ -100,7 +100,7 @@ def constrain(inp, minval, maxval):
     return inp
 
 
-def computeHeatMap(board_features, prev_board_features):
+def computeHeatMap(board_features, prev_board_features, input_img):
     size = 480, 480, 3
     cell_size = 60
     m_red = np.zeros(size, dtype=np.uint8)
@@ -132,10 +132,13 @@ def computeHeatMap(board_features, prev_board_features):
             # print 'vals black :' + str(val_black) + ' red: ' + str(val_red)
             # print 'black :' + str(heat_black) + ' red: ' + str(heat_red)
 
-    cv2.imshow('Red Heatmap', m_red)
-    cv2.imshow('Black Heatmap', m_black)
-    cv2.moveWindow('Red Heatmap', 640,0)
-    cv2.moveWindow('Black Heatmap', 1120, 0)
+    input_img[0:480,900:1380] = m_red
+    input_img[480:960, 900:1380] = m_black
+    # cv2.imshow('Red Heatmap', m_red)
+    # cv2.imshow('Black Heatmap', m_black)
+    # cv2.moveWindow('Red Heatmap', 640,0)
+    # cv2.moveWindow('Black Heatmap', 1120, 0)
+    cv2.waitKey(5)
     return [heatmap_red, heatmap_black]
 
 
@@ -188,10 +191,10 @@ def computeAllPossibleMoves(heatmap_red, heatmap_black, turn):
 USE_DUMP = False
 
 ## this function will use current and previous states to generate the next legal move
-def detectMove(cur_board_features, prev_board_features, chessgame,move_count):
+def detectMove(cur_board_features, prev_board_features, chessgame,move_count, input_img):
     print(chessgame)
     move = None
-    heatmap_red, heatmap_black = computeHeatMap(cur_board_features, prev_board_features)
+    heatmap_red, heatmap_black = computeHeatMap(cur_board_features, prev_board_features, input_img)
 
     #TODO determine whose move is it using the chessgame state
     if (move_count % 2)== 0:
@@ -201,7 +204,7 @@ def detectMove(cur_board_features, prev_board_features, chessgame,move_count):
     print 'All Possible moves using heatmap difference alone'
     print all_moves
 
-    cv2.waitKey(0)
+    cv2.waitKey(10)
 
     if all_moves is not None:
         move = validMove(chessgame, all_moves)

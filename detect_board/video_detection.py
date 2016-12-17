@@ -33,7 +33,7 @@ if __name__=="__main__":
     detection_status['board'] = False
     detection_status['corners'] = False
 
-    engage_detection = False
+    engage_detection = True
     frame_index = 0
 
     board_features = {}
@@ -77,7 +77,8 @@ if __name__=="__main__":
             del_t = t_stop - t_start
 
             # use threshold to compute success of the stage
-            if res_board[1] > 40:
+            print 'Res_score : ' + str(res_board[1])
+            if res_board[1] > 5:
                 detection_status['board'] = True;
             else:
                 detection_status['board'] = False;
@@ -86,15 +87,17 @@ if __name__=="__main__":
 
             ##====Executing the corner detection and updation =====
             t_start = time.time()
-            if detection_status['board']:
+            if detection_status['board'] :
                 # Display the res_boardult of board detection if successful
+                res_score = 'R_score : '+str(res_board[1])
+                cv2.putText(res_board[0], res_score, (10, 25), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.7, (255, 0, 50))
                 cv2.imshow('output', res_board[0])
                 # out.write(res_board[0])
                 # cv2.waitKey(0)
 
                 # run the main code for corner detection
-                [corner_error_flag, outp_corners, all_corners] = fast_corner_detector(res_board[0], res_board[4])
-                detection_status['corners'] = not corner_error_flag
+                # [corner_error_flag, outp_corners, all_corners] = fast_corner_detector(res_board[0], res_board[4])
+                # detection_status['corners'] = not corner_error_flag
                 all_colours = []
                 # all_colours = load_colours.parseCSVMatrix(param_file, 4)
             t_stop = time.time()

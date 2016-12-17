@@ -3,6 +3,7 @@ import numpy as np
 import sys
 import time
 
+import chess
 import detect_corners_r as dc
 from corner_detector import *
 import cellscore as cs
@@ -83,6 +84,9 @@ if __name__=="__main__":
             res_board = dc.multiStageDetection(frame, param_file)
             t_stop = time.time()
             del_t = t_stop - t_start
+
+            detection_status['board'] = False
+            detection_status['corners'] = False
 
             # use threshold to compute success of the stage
             if res_board[1] > 40:
@@ -171,10 +175,18 @@ if __name__=="__main__":
                 if len(cur_board_features) == 64 and len(prev_board_features) == 64:
                     move = chess_move.detectMove(cur_board_features, prev_board_features, chessgame, move_count, input_img)
                     print move
+                    # print board_msg
+                    # for i in range(len(board_msg)):
+                    #     chess_row = board_msg[i]
+                    #     cv2.putText(input_img, chess_row, (1400, int((i+1)*50)), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,
+                    #                 (0, 240, 240), 1)
                     if move is not None:
                         chessgame.apply_move(move)
                         move_count = move_count + 1
                         status_msg = 'Move %d : %s' % (move_count, move)
+                        board_msg_raw = str(chess.Board(str(chessgame)))
+                        board_msg = board_msg_raw.split('\n')
+                        print board_msg_raw
                     else:
                         status_msg = 'Detection Failed '
                     cv2.putText(input_img, status_msg, (10, 725), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 240, 240), 2)

@@ -171,7 +171,7 @@ def getBoardCorners(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
     if debug_mode :
         print 'Reprojection error: %f' % (repoj_error)
         if draw_mode:
-            cv2.imshow('outp_debg', outp_dbg)
+            cv2.imshow('outp_debg', cv2.pyrDown(outp_dbg))
             cv2.waitKey(0)
         print "H matrix is "
         print H
@@ -196,21 +196,24 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
     outp_final = []
     board_points = [];
     corner_indexes = [];
+    scores = [0,0]
+    f = open('R_scores.csv', 'a')
 
     res1 = getBoardCorners(frame_inp, param_file, debug_mode, draw_mode)
+    scores[0] = res1[2]
     if debug_mode :
         print '1:R_score= ' + str(res1[2])
         if draw_mode:
             cv2.putText(res1[4], 'R1score = ' + str(res1[2]), (40, 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (240, 0, 0), 2)
-            # cv2.imshow('STG1_dbg', cv2.pyrDown(res1[4]))
-            cv2.imshow('STG1_dbg', res1[4])
+            cv2.imshow('STG1_dbg', cv2.pyrDown(res1[4]))
+            # cv2.imshow('STG1_dbg', res1[4])
 
     if res1[1] is not None:
 
         corner_indexes = res1[6]
 
-        if res1[2] > 20:
+        if res1[2] > 40:
             R_score = res1[2]
             outp_stage1 = res1[1][int(offset):int(2 * a1 + b + offset),
                          int(offset):int(2 * a1 + b + offset)]
@@ -240,6 +243,7 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
                         # print "STAGE1 complete"
         else:
             res2 = getBoardCorners(res1[1], param_file, debug_mode, draw_mode)
+            scores[1] = res2[2]
             if debug_mode:
                 print '2:R_score= ' + str(res2[2])
                 if draw_mode:
@@ -283,6 +287,8 @@ def multiStageDetection(frame_inp, param_file, debug_mode = 0, draw_mode = 0):
 
     ##TODO remove this later
     corner_indexes = [1,0,2,3]
+    f.write('%f,%f\n'%(scores[0], scores[1]))
+    f.close()
     return [outp_final, R_score, H, board_points, corner_indexes]
 
 

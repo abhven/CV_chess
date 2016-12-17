@@ -31,7 +31,8 @@ def startPoints(p_removed,notp_placed,heatmap_placed):
         # Find whta is being passed on
         score = [0,0,0]
         n = 1
-        while len(notp_placed_copy) > 0:
+        print notp_placed_copy
+        while len(notp_placed_copy) > 0 and n <7:
             for j in range(x-n,x+n+1):
                 for k in range(y-n,y+n+1):
                     try:
@@ -63,7 +64,7 @@ def endPoints(p_placed,notp_removed,heatmap_removed):
         # Find whta is being passed on
         score = [0,0,0]
         n = 0
-        while len(notp_removed_copy) > 0:
+        while len(notp_removed_copy) > 0 and n<7:
             for j in range(x-n,x+n+1):
                 for k in range(y-n,y+n+1):
                     try:
@@ -74,6 +75,7 @@ def endPoints(p_placed,notp_removed,heatmap_removed):
                     except IndexError:
                         pass
             n = n + 1
+            print n,notp_removed_copy
         if n == 0:
             totalscore[i] = i[2]
         else:
